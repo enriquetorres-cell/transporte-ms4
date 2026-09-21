@@ -72,7 +72,7 @@ async def hoja_de_vida(conductor_id: int):
         resumen = await pedir(c, f"{MS3}/conductores/{conductor_id}/resumen", avisos, "ms3")
     return {
         "conductor": conductor,
-        "vehiculos": (vehiculos or {}).get("items", vehiculos),
+        "vehiculos": vehiculos or [],   # MS1 /vehiculos ya devuelve una lista
         "ultimos_viajes": (viajes or {}).get("items"),
         "resumen_calificaciones": resumen,
         "advertencias": avisos,
