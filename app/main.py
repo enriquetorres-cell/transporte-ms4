@@ -93,7 +93,10 @@ async def detalle_completo(viaje_id: int):
                 pasajero = await pedir(c, f"{MS1}/usuarios/{viaje['pasajero_id']}", avisos, "ms1")
             if viaje.get("conductor_id"):
                 conductor = await pedir(c, f"{MS1}/conductores/{viaje['conductor_id']}", avisos, "ms1")
-        calif = await pedir(c, f"{MS3}/calificaciones/{viaje_id}", avisos, "ms3")
+        # MS3 identifica cada calificación por su ObjectId; la del viaje se busca
+        # filtrando por viaje_id (índice único: 0 o 1 resultado).
+        listado = await pedir(c, f"{MS3}/calificaciones?viaje_id={viaje_id}&limit=1", avisos, "ms3")
+        calif = next((x for x in (listado or {}).get("items", []) if x.get("viaje_id") == viaje_id), None)
     return {
         "viaje": viaje,
         "pasajero": pasajero,
