@@ -45,13 +45,15 @@ async def pedir(cliente, url, avisos, etiqueta):
     return None
 
 
+# MS2 (Spring) filtra por parámetros camelCase (pasajeroId, conductorId); con
+# pasajero_id/conductor_id los ignora y devuelve viajes de cualquier persona.
 @app.get(PREFIX + "/usuarios/{usuario_id}/perfil")
 async def perfil(usuario_id: int):
     """Perfil del pasajero: datos (MS1) + últimos viajes (MS2) + calificaciones (MS3)."""
     avisos = []
     async with httpx.AsyncClient() as c:
         usuario = await pedir(c, f"{MS1}/usuarios/{usuario_id}", avisos, "ms1")
-        viajes = await pedir(c, f"{MS2}/viajes?pasajero_id={usuario_id}&limit=10", avisos, "ms2")
+        viajes = await pedir(c, f"{MS2}/viajes?pasajeroId={usuario_id}&limit=10", avisos, "ms2")
         calif = await pedir(c, f"{MS3}/calificaciones?pasajero_id={usuario_id}&limit=10", avisos, "ms3")
     return {
         "usuario": usuario,
@@ -68,7 +70,7 @@ async def hoja_de_vida(conductor_id: int):
     async with httpx.AsyncClient() as c:
         conductor = await pedir(c, f"{MS1}/conductores/{conductor_id}", avisos, "ms1")
         vehiculos = await pedir(c, f"{MS1}/conductores/{conductor_id}/vehiculos", avisos, "ms1")
-        viajes = await pedir(c, f"{MS2}/viajes?conductor_id={conductor_id}&limit=10", avisos, "ms2")
+        viajes = await pedir(c, f"{MS2}/viajes?conductorId={conductor_id}&limit=10", avisos, "ms2")
         resumen = await pedir(c, f"{MS3}/conductores/{conductor_id}/resumen", avisos, "ms3")
     return {
         "conductor": conductor,
