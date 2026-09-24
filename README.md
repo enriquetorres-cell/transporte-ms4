@@ -4,6 +4,9 @@ Microservicio **sin base de datos** (Contrato Cero). Sólo **orquesta** MS1 + MS
 Es el "1 microservicio que no tenga base de datos y sólo consuma otros microservicios"
 que exige el enunciado.
 
+> **Despliegue completo del proyecto en AWS (paso a paso):** ver la
+> [guía principal](https://github.com/Limepal/MS1-Usuarios-y-Conductores#readme).
+
 ## Endpoints (todos bajo `/ms4`)
 
 | Ruta | Compone |
@@ -13,6 +16,10 @@ que exige el enunciado.
 | `GET /ms4/usuarios/{id}/perfil` | MS1 usuario + MS2 últimos viajes + MS3 calificaciones |
 | `GET /ms4/conductores/{id}/hoja-de-vida` | MS1 conductor y vehículos + MS2 viajes + MS3 resumen |
 | `GET /ms4/viajes/{id}/detalle-completo` | MS2 viaje + MS1 pasajero y conductor + MS3 su calificación |
+
+Llamadas que hace: `GET {MS1}/usuarios/{id}`, `GET {MS1}/conductores/{id}`, `GET {MS1}/conductores/{id}/vehiculos`,
+`GET {MS2}/viajes?pasajeroId=…|conductorId=…&limit=10` (los filtros de MS2 van en camelCase), `GET {MS2}/viajes/{id}`,
+`GET {MS3}/calificaciones?pasajero_id=…|viaje_id=…` y `GET {MS3}/conductores/{id}/resumen`.
 
 ## Regla de tolerancia (clave)
 
@@ -37,16 +44,16 @@ MS1_URL=http://localhost:8001/ms1 MS2_URL=http://localhost:8002/ms2 MS3_URL=http
 curl http://localhost:8004/ms4/health
 ```
 
-## Construir y publicar la imagen
+## Con Docker
 
 ```bash
-docker build -t TU_USUARIO/transporte-ms4:1.0 .
-docker login && docker push TU_USUARIO/transporte-ms4:1.0
+docker build -t ms4img .
+docker run -d --name ms4 --network host \
+  -e MS1_URL=http://localhost:8001/ms1 -e MS2_URL=http://localhost:8002/ms2 -e MS3_URL=http://localhost:8003/ms3 ms4img
 ```
 
-Avísale a P1 el nombre/tag para el `docker-compose.prod.yml`. El repo debe quedar **público**.
+## En producción (AWS)
 
-## En producción (detrás del ALB)
-
-`MS1_URL`, `MS2_URL`, `MS3_URL` apuntan a las rutas del ALB interno / API Gateway
-(cada microservicio bajo su prefijo). Sin barra final.
+En mv-prod-a y mv-prod-b, `desplegar-prod.sh` (repo de MS1) clona este repo, construye `ms4img` y lo
+levanta con `docker compose` en **red host**, de modo que llega a MS1, MS2 y MS3 por `localhost:800N`
+en la misma MV. El ALB interno enruta `/ms4/*` a `tg-ms4` y el API Gateway lo expone por HTTPS.
